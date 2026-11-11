@@ -27,6 +27,7 @@ go.work.sum
 
 # Claude Code
 CLAUDE.md
+plan.md
 .claude/
 
 # macOS
