@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/KozhInna/playground-finder/internal/config"
 	"github.com/KozhInna/playground-finder/internal/db"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -20,7 +22,6 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(cfg.Port)
 
 	ctx := context.Background()
 
@@ -31,13 +32,18 @@ func main() {
 		os.Exit(1)
 	}
 	defer pool.Close()
-	
-	// Check the DB works: count rows in playgrounds
- 	var count int
-	err = pool.QueryRow(ctx, "SELECT count(*) FROM playgrounds").Scan(&count)
-	if err != nil {
+
+	// Router with the default logger and panic recovery middleware
+	r := gin.Default()
+
+	// Liveness check of the server
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
+	// Start the server (blocks until it stops)
+	if err := r.Run(":" + cfg.Port); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println("playgrounds:", count)
 }
